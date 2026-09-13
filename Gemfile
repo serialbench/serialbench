@@ -12,9 +12,12 @@ unless Gem.win_platform? && RUBY_PLATFORM.include?('aarch64')
   gem 'libxml-ruby'
 end
 
-gem 'leptris', '1.9.156.0'  # precompiled platform gems bundle libleptris (darwin/linux/mingw)
-gem 'yeptris', '0.2.0.1'    # precompiled darwin/linux; no windows or darwin-intel gems yet
-gem 'teptris', '0.1.0'      # precompiled all platforms
+gem 'leptris', '1.9.156.2'  # precompiled platform gems bundle libleptris (darwin/linux/mingw)
+gem 'yeptris', '0.2.2.1'    # precompiled darwin/linux; no windows or darwin-intel gems yet
+# teptris stays 0.1.0: 0.2.1's native ext links libruby by absolute build-runner
+# path (loads only under exactly Ruby 3.3.12 at hostedtoolcache) and ships no
+# mingw gems. Bump when the ext links portably and windows variants exist.
+gem 'teptris', '0.1.0'
 gem 'benchmark'  # Removed from stdlib in Ruby 4.0
 gem 'base64'  # Required for Ruby 3.4+
 gem 'lutaml-model', '~> 0.7'
