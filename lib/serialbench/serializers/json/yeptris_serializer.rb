@@ -27,7 +27,8 @@ module Serialbench
             require 'yeptris'
             Yeptris::JSON.load('{"probe":true}')
             true
-          rescue StandardError, LoadError
+          rescue StandardError, LoadError => e
+            warn "#{name} unavailable: #{e.class}: #{e.message}"
             false
           end
         end

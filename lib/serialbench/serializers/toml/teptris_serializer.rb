@@ -27,7 +27,8 @@ module Serialbench
             require 'teptris'
             Teptris::TOML.load("probe = true\n")
             true
-          rescue StandardError, LoadError
+          rescue StandardError, LoadError => e
+            warn "#{name} unavailable: #{e.class}: #{e.message}"
             false
           end
         end
