@@ -18,17 +18,20 @@ require_relative 'serializers/json/json_serializer'
 require_relative 'serializers/json/oj_serializer'
 require_relative 'serializers/json/yajl_serializer'
 require_relative 'serializers/json/rapidjson_serializer'
+require_relative 'serializers/json/yeptris_serializer'
 
 # YAML Serializers
 require_relative 'serializers/yaml/base_yaml_serializer'
 require_relative 'serializers/yaml/psych_serializer'
 require_relative 'serializers/yaml/syck_serializer'
+require_relative 'serializers/yaml/yeptris_serializer'
 
 # TOML Serializers
 require_relative 'serializers/toml/base_toml_serializer'
 require_relative 'serializers/toml/toml_rb_serializer'
 require_relative 'serializers/toml/tomlib_serializer'
 require_relative 'serializers/toml/tomlrb_serializer'
+require_relative 'serializers/toml/teptris_serializer'
 
 module Serialbench
   module Serializers
@@ -46,16 +49,19 @@ module Serialbench
         Json::JsonSerializer,
         Json::OjSerializer,
         Json::RapidjsonSerializer,
-        Json::YajlSerializer
+        Json::YajlSerializer,
+        Json::YeptrisSerializer
       ],
       yaml: [
         Yaml::PsychSerializer,
-        Yaml::SyckSerializer
+        Yaml::SyckSerializer,
+        Yaml::YeptrisSerializer
       ],
       toml: [
         Toml::TomlRbSerializer,
         Toml::TomlibSerializer,
-        Toml::TomlrbSerializer
+        Toml::TomlrbSerializer,
+        Toml::TeptrisSerializer
       ]
     }.freeze
 

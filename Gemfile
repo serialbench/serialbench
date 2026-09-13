@@ -12,7 +12,9 @@ unless Gem.win_platform? && RUBY_PLATFORM.include?('aarch64')
   gem 'libxml-ruby'
 end
 
-gem 'leptris', '1.9.35'  # precompiled platform gems bundle libleptris (darwin/linux/mingw)
+gem 'leptris', '1.9.152.1'  # precompiled platform gems bundle libleptris (darwin/linux/mingw)
+gem 'yeptris', '0.2.0.1'    # precompiled darwin/linux; no windows or darwin-intel gems yet
+gem 'teptris', '0.1.0'      # precompiled all platforms
 gem 'benchmark'  # Removed from stdlib in Ruby 4.0
 gem 'base64'  # Required for Ruby 3.4+
 gem 'lutaml-model', '~> 0.7'
