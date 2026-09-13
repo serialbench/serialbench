@@ -441,24 +441,79 @@ RSpec.describe 'Serialbench Serializers' do
 
       it 'includes all expected JSON serializers' do
         json_serializers = Serialbench::Serializers.for_format(:json)
-        expected_json = %w[json oj rapidjson yajl]
+        expected_json = %w[json oj rapidjson yajl yeptris-json]
         actual_json = json_serializers.map { |s| s.name }
         expect(actual_json).to match_array(expected_json)
       end
 
       it 'includes all expected YAML serializers' do
         yaml_serializers = Serialbench::Serializers.for_format(:yaml)
-        expected_yaml = %w[psych syck]
+        expected_yaml = %w[psych syck yeptris-yaml]
         actual_yaml = yaml_serializers.map { |s| s.name }
         expect(actual_yaml).to match_array(expected_yaml)
       end
 
       it 'includes all expected TOML serializers' do
         toml_serializers = Serialbench::Serializers.for_format(:toml)
-        expected_toml = %w[toml-rb tomlib tomlrb]
+        expected_toml = %w[toml-rb tomlib tomlrb teptris]
         actual_toml = toml_serializers.map { |s| s.name }
         expect(actual_toml).to match_array(expected_toml)
       end
+    end
+  end
+
+
+  describe Serialbench::Serializers::Yaml::YeptrisSerializer do
+    let(:serializer) { described_class.instance }
+
+    it 'round-trips YAML documents' do
+      skip 'yeptris unavailable' unless serializer.available?
+
+      data = { 'name' => 'serialbench', 'sizes' => ['small', 'large'], 'score' => 42.5 }
+      expect(serializer.parse(serializer.generate(data))).to eq(data)
+    end
+
+    it 'parses and streams' do
+      skip 'yeptris unavailable' unless serializer.available?
+
+      expect(serializer.parse("a: 1
+")).to eq('a' => 1)
+      docs = []
+      serializer.stream_parse("a: 1
+---
+b: 2
+") { |event, doc| docs << doc if event == :document }
+      expect(docs.length).to eq(2)
+    end
+
+    it 'declares generation and streaming capabilities' do
+      expect(serializer.capabilities).to include(:generate, :streaming)
+    end
+  end
+
+  describe Serialbench::Serializers::Json::YeptrisSerializer do
+    let(:serializer) { described_class.instance }
+
+    it 'parses JSON without claiming generation' do
+      skip 'yeptris unavailable' unless serializer.available?
+
+      expect(serializer.parse('{"a":1,"b":[1,2]}')).to eq('a' => 1, 'b' => [1, 2])
+      expect(serializer.capabilities).not_to include(:generate)
+    end
+  end
+
+  describe Serialbench::Serializers::Toml::TeptrisSerializer do
+    let(:serializer) { described_class.instance }
+
+    it 'round-trips TOML documents' do
+      skip 'teptris unavailable' unless serializer.available?
+
+      data = { 'title' => 'x', 'owner' => { 'name' => 'ronald' } }
+      expect(serializer.parse(serializer.generate(data))).to eq(data)
+    end
+
+    it 'inherits the TOML feature set' do
+      expect(serializer.capabilities).to include(:generate, :arrays_of_tables, :inline_tables)
     end
   end
 
@@ -565,8 +620,7 @@ RSpec.describe 'Serialbench Serializers' do
     it 'can round-trip data through available serializers' do
       Serialbench::Serializers.available.each do |serializer|
         next unless serializer.available?
-        # Skip tomlrb which doesn't support generation
-        next if serializer.name == 'tomlrb'
+        next unless serializer.supports?(:generate)
 
         begin
           # Generate serialized data
@@ -603,8 +657,7 @@ RSpec.describe 'Serialbench Serializers' do
 
     it 'all available serializers can handle basic operations' do
       Serialbench::Serializers.available.each do |serializer|
-        # Skip tomlrb which doesn't support generation
-        next if serializer.name == 'tomlrb'
+        next unless serializer.supports?(:generate)
 
         # Test basic generation
         expect { serializer.generate(small_data) }.not_to raise_error
