@@ -23,6 +23,7 @@ operations:
 - xpath
 - xquery
 - xslt
+- xslt30
 - validation
 - memory
 
