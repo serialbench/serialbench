@@ -116,6 +116,12 @@ jobs:
       - name: Install gems
         run: bundle install
 
+      - name: Load canonical fixtures
+        run: |
+          git clone --depth 1 https://github.com/serialbench/fixtures.git test_data
+          (cd test_data && sha256sum -c SHA256SUMS) || (cd test_data && shasum -a 256 -c SHA256SUMS)
+        shell: bash
+
       - name: Point teptris at its vendored DLL (Windows)
         if: startsWith(matrix.platform, 'windows-')
         shell: bash

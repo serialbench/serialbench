@@ -30,3 +30,4 @@ results/
 
 # Ruby version manager files
 .ruby-version
+test_data/
