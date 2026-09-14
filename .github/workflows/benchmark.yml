@@ -255,6 +255,41 @@ jobs:
         run: .github/scripts/push-to-data.sh toml ${{ matrix.ruby-version }} ${{ matrix.platform }}
         shell: bash
 
+      - name: Benchmark html
+        continue-on-error: true
+        shell: bash
+        env:
+          GITHUB_RUNNER_PLATFORM: ${{ matrix.platform }}
+          DATA_REPO_TOKEN: ${{ secrets.DATA_REPO_TOKEN }}
+          DATA_RUN_DATE: ${{ needs.setup.outputs.run-date }}
+        run: |
+          if [ "${{ github.run_attempt }}" -gt 1 ] && .github/scripts/format-status.sh html ${{ matrix.ruby-version }} ${{ matrix.platform }}; then
+            echo "html already in the data repo — skipping (gap-filling rerun)"
+            exit 0
+          fi
+          bundle exec serialbench environment execute \
+            config/environments/ci-ruby-${{ matrix.ruby-version }}.yml \
+            config/benchmarks/full-html.yml \
+            "results/runs/ci-ruby-${{ matrix.ruby-version }}-${{ matrix.platform }}/html"
+
+      - name: Upload html
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results-${{ matrix.platform }}-ruby-${{ matrix.ruby-version }}-html
+          path: results/runs/ci-ruby-${{ matrix.ruby-version }}-${{ matrix.platform }}/html
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Push html to data repo
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        env:
+          DATA_REPO_TOKEN: ${{ secrets.DATA_REPO_TOKEN }}
+          DATA_RUN_DATE: ${{ needs.setup.outputs.run-date }}
+        run: .github/scripts/push-to-data.sh html ${{ matrix.ruby-version }} ${{ matrix.platform }}
+        shell: bash
+
       # Each format is an independent checkpoint with its own upload.
       # A failure in one format doesn't prevent the others from uploading.
       - name: Benchmark xml
@@ -302,7 +337,7 @@ jobs:
           DATA_RUN_DATE: ${{ needs.setup.outputs.run-date }}
         run: |
           MISSING=""
-          for FMT in json yaml toml xml; do
+          for FMT in json yaml toml html xml; do
             if .github/scripts/format-status.sh "$FMT" "${{ matrix.ruby-version }}" "${{ matrix.platform }}"; then
               echo "$FMT: in data repo"
             else

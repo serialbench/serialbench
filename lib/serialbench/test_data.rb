@@ -38,8 +38,11 @@ module Serialbench
       when 'medium.yaml' then generate_medium_yaml
       when 'large.yaml' then generate_large_yaml
       when 'small.toml' then generate_small_toml
+      when 'small.html' then generate_small_html
       when 'medium.toml' then generate_medium_toml
+      when 'medium.html' then generate_medium_html
       when 'large.toml' then generate_large_toml
+      when 'large.html' then generate_large_html
       else raise ArgumentError, "no test data generator for #{key}"
       end
     end
@@ -203,6 +206,50 @@ module Serialbench
           </records>
         </dataset>
       XML
+    end
+
+    # HTML test data generators (same dataset as XML, as tables)
+    def generate_small_html
+      data = small_test_data_structure
+      rows = data[:config].flat_map do |_section, entries|
+        entries.flat_map do |_k, v|
+          case v
+          when Hash then v.map { |k2, v2| "<tr><td>#{k2}</td><td>#{v2}</td></tr>" }
+          else []
+          end
+        end
+      end
+      html_page('config', rows)
+    end
+
+    def generate_medium_html
+      data = medium_test_data_structure
+      rows = data[:users].map do |u|
+        "<tr><td>#{u[:id]}</td><td>#{u[:name][0, 30]}</td></tr>"
+      end
+      html_page('users', rows)
+    end
+
+    def generate_large_html
+      data = large_test_data_structure
+      rows = data[:dataset][:records].map do |r|
+        "<tr><td>#{r[:id]}</td><td>#{r[:data][:field1][0, 30]}</td></tr>"
+      end
+      html_page('dataset', rows)
+    end
+
+    def html_page(title, rows)
+      <<~HTML
+        <!DOCTYPE html>
+        <html>
+        <head><meta charset="utf-8"><title>serialbench #{title}</title></head>
+        <body>
+        <table>
+        #{rows.join("\n")}
+        </table>
+        </body>
+        </html>
+      HTML
     end
 
     # JSON test data generators

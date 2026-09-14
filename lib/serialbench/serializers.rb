@@ -12,6 +12,12 @@ require_relative 'serializers/xml/oga_serializer'
 require_relative 'serializers/xml/libxml_serializer'
 require_relative 'serializers/xml/leptris_serializer'
 
+# HTML Serializers
+require_relative 'serializers/html/base_html_serializer'
+require_relative 'serializers/html/nokogiri_serializer'
+require_relative 'serializers/html/oga_serializer'
+require_relative 'serializers/html/leptris_serializer'
+
 # JSON Serializers
 require_relative 'serializers/json/base_json_serializer'
 require_relative 'serializers/json/json_serializer'
@@ -51,6 +57,11 @@ module Serialbench
         Json::RapidjsonSerializer,
         Json::YajlSerializer,
         Json::YeptrisSerializer
+      ],
+      html: [
+        Html::NokogiriSerializer,
+        Html::OgaSerializer,
+        Html::LeptrisSerializer
       ],
       yaml: [
         Yaml::PsychSerializer,

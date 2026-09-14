@@ -5,7 +5,7 @@ require 'lutaml/model'
 module Serialbench
   module Models
     class SerializerInformation < Lutaml::Model::Serializable
-      attribute :format, :string, values: %w[xml json yaml toml]
+      attribute :format, :string, values: %w[xml html json yaml toml]
       attribute :name, :string
       attribute :version, :string
       attribute :features, :hash
@@ -20,7 +20,7 @@ module Serialbench
 
     class AdapterPerformance < Lutaml::Model::Serializable
       attribute :adapter, :string
-      attribute :format, :string, values: %w[xml json yaml toml]
+      attribute :format, :string, values: %w[xml html json yaml toml]
       attribute :data_size, :string, values: %w[small medium large]
 
       key_value do
@@ -71,6 +71,9 @@ module Serialbench
       attribute :memory, MemoryPerformance, collection: true
       attribute :streaming, IterationPerformance, collection: true
       attribute :xpath, IterationPerformance, collection: true
+      attribute :xquery, IterationPerformance, collection: true
+      attribute :xslt, IterationPerformance, collection: true
+      attribute :validation, IterationPerformance, collection: true
 
       key_value do
         map 'serializers', to: :serializers
@@ -79,6 +82,9 @@ module Serialbench
         map 'memory', to: :memory
         map 'streaming', to: :streaming
         map 'xpath', to: :xpath
+        map 'xquery', to: :xquery
+        map 'xslt', to: :xslt
+        map 'validation', to: :validation
       end
     end
   end

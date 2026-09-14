@@ -39,7 +39,17 @@ module Serialbench
         end
 
         def capabilities
-          super | Set.new(%i[xpath sax stax])
+          super | Set.new(%i[xpath xslt validation sax stax])
+        end
+
+        def xslt_transform(document, stylesheet)
+          require 'nokogiri'
+          Nokogiri::XSLT(stylesheet).transform(document).to_s
+        end
+
+        def validate(document, schema)
+          require 'nokogiri'
+          Nokogiri::XML::RelaxNG(schema).valid?(document)
         end
 
         def xpath_query(document, expression)
