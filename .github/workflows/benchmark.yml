@@ -116,6 +116,15 @@ jobs:
       - name: Install gems
         run: bundle install
 
+      - name: Fetch Saxon-HE (XSLT 2.0/3.0 comparison)
+        run: |
+          mkdir -p vendor
+          curl -sL -o vendor/saxonhe.jar "https://repo1.maven.org/maven2/net/sf/saxon/Saxon-HE/12.10/Saxon-HE-12.10.jar"
+          curl -sL -o vendor/xmlresolver.jar "https://repo1.maven.org/maven2/org/xmlresolver/xmlresolver/5.2.2/xmlresolver-5.2.2.jar"
+          echo "SAXON_JAR=$PWD/vendor/saxonhe.jar" >> "$GITHUB_ENV"
+          echo "XMLRESOLVER_JAR=$PWD/vendor/xmlresolver.jar" >> "$GITHUB_ENV"
+        shell: bash
+
       - name: Load canonical fixtures
         run: |
           git clone --depth 1 https://github.com/serialbench/fixtures.git test_data

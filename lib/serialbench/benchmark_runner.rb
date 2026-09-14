@@ -142,10 +142,39 @@ _DEFAULT_XSLT_STYLESHEET = <<'XSL'.freeze
 </xsl:stylesheet>
 XSL
 
+_DEFAULT_XSLT30_STYLESHEET = <<'XSL30'.freeze
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+                xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                exclude-result-prefixes="xs"
+                version="3.0">
+  <xsl:output method="xml" indent="yes"/>
+  <xsl:template match="/">
+    <report30>
+      <xsl:iterate select="//user | //record | //database | //cache">
+        <xsl:param name="labels" as="xs:string*" select="()"/>
+        <xsl:on-completion>
+          <joined><xsl:value-of select="string-join($labels, ', ')"/></joined>
+          <count><xsl:value-of select="count($labels)"/></count>
+        </xsl:on-completion>
+        <xsl:variable name="label" select="string((name, data/field1, ttl)[1])"/>
+        <xsl:if test="$label != ''">
+          <row kind="{local-name()}" label="{upper-case($label)}"/>
+        </xsl:if>
+        <xsl:next-iteration>
+          <xsl:with-param name="labels" select="if ($label != '') then ($labels, $label) else $labels"/>
+        </xsl:next-iteration>
+      </xsl:iterate>
+    </report30>
+  </xsl:template>
+</xsl:stylesheet>
+XSL30
+
     XPATH_QUERIES = ['//book', "//book[@id='101']", '//book[price > 30]/title'].freeze
     XQUERY_EXPRESSIONS = ['count(//user | //record)', "//record[@id='101']/data/field1", '//user[profile/age > 40]/name'].freeze
     RNG_SCHEMA = File.expand_path('test_data/schema.rng', Dir.pwd).then { |p| File.exist?(p) ? File.read(p) : _DEFAULT_RNG_SCHEMA }
     XSLT_STYLESHEET = File.expand_path('test_data/transform.xsl', Dir.pwd).then { |p| File.exist?(p) ? File.read(p) : _DEFAULT_XSLT_STYLESHEET }
+    XSLT30_STYLESHEET = File.expand_path('test_data/transform30.xsl', Dir.pwd).then { |p| File.exist?(p) ? File.read(p) : _DEFAULT_XSLT30_STYLESHEET }
 
     OPERATIONS = {
       'parsing' => ->(s, data) { s.parse(data) },
@@ -158,7 +187,8 @@ XSL
         doc = s.parse(data)
         XQUERY_EXPRESSIONS.each { |x| s.xquery_eval(doc, x) }
       },
-      'xslt' => ->(s, data) { s.xslt_transform(s.parse(data), XSLT_STYLESHEET) },
+      'xslt' => ->(s, data) { s.xslt_apply(data, XSLT_STYLESHEET) },
+      'xslt30' => ->(s, data) { s.xslt_apply(data, XSLT30_STYLESHEET) },
       'validation' => ->(s, data) { s.validate(s.parse(data), RNG_SCHEMA) },
       'streaming' => ->(s, data) { s.stream_parse(data) { |_event, _data| } },
     }.freeze
@@ -280,6 +310,8 @@ XSL
       serializers = Serializers.for_format(format)
 
       case type_name
+      when 'parsing', 'memory'
+        serializers.select { |s| s.supports?(:parse) }
       when 'generation'
         serializers.select { |s| s.supports?(:generate) }
       when 'streaming'
@@ -292,6 +324,8 @@ XSL
         serializers.select { |s| s.supports?(:xslt) }
       when 'validation'
         serializers.select { |s| s.supports?(:validation) }
+      when 'xslt30'
+        serializers.select { |s| s.supports?(:xslt30) }
       else
         serializers
       end

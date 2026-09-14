@@ -37,7 +37,7 @@ module Serialbench
         end
 
         def capabilities
-          super | Set.new(%i[xpath xquery xslt validation sax stax])
+          super | Set.new(%i[xpath xquery xslt xslt30 validation sax stax])
         end
 
         def xquery_eval(document, expression)

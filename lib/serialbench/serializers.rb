@@ -11,6 +11,7 @@ require_relative 'serializers/xml/nokogiri_serializer'
 require_relative 'serializers/xml/oga_serializer'
 require_relative 'serializers/xml/libxml_serializer'
 require_relative 'serializers/xml/leptris_serializer'
+require_relative 'serializers/xml/saxon_serializer'
 
 # HTML Serializers
 require_relative 'serializers/html/base_html_serializer'
@@ -49,7 +50,8 @@ module Serialbench
         Xml::NokogiriSerializer,
         Xml::OgaSerializer,
         Xml::LibxmlSerializer,
-        Xml::LeptrisSerializer
+        Xml::LeptrisSerializer,
+        Xml::SaxonSerializer
       ],
       json: [
         Json::JsonSerializer,

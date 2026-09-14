@@ -73,6 +73,7 @@ module Serialbench
       attribute :xpath, IterationPerformance, collection: true
       attribute :xquery, IterationPerformance, collection: true
       attribute :xslt, IterationPerformance, collection: true
+      attribute :xslt30, IterationPerformance, collection: true
       attribute :validation, IterationPerformance, collection: true
 
       key_value do
@@ -84,6 +85,7 @@ module Serialbench
         map 'xpath', to: :xpath
         map 'xquery', to: :xquery
         map 'xslt', to: :xslt
+        map 'xslt30', to: :xslt30
         map 'validation', to: :validation
       end
     end

@@ -27,6 +27,10 @@ module Serialbench
           super | Set.new(%i[namespaces])
         end
 
+        def xslt_apply(source_xml, stylesheet)
+          xslt_transform(parse(source_xml), stylesheet)
+        end
+
         # XML-specific features derive from the capability set
         def features
           {
