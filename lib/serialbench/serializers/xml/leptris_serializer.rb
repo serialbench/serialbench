@@ -37,7 +37,26 @@ module Serialbench
         end
 
         def capabilities
-          super | Set.new(%i[xpath sax stax])
+          super | Set.new(%i[xpath xquery xslt validation sax stax])
+        end
+
+        def xquery_eval(document, expression)
+          require 'leptris'
+          require 'leptris/xml'
+          result = Leptris::XML::XQuery.parse(expression).eval(document)
+          result.respond_to?(:length) ? result.length : 1
+        end
+
+        def xslt_transform(document, stylesheet)
+          require 'leptris'
+          require 'leptris/xml'
+          Leptris::XML::XSLT.parse(stylesheet).apply_to(document).serialize
+        end
+
+        def validate(document, schema)
+          require 'leptris'
+          require 'leptris/xml'
+          Leptris::XML::RelaxNG.parse(schema).valid?(document)
         end
 
         def xpath_query(document, expression)

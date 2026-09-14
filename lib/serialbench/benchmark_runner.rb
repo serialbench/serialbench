@@ -26,15 +26,140 @@ module Serialbench
     end
 
     # Each operation maps to a lambda. Adding an operation = one entry.
+_DEFAULT_RNG_SCHEMA = <<'RNG'.freeze
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <start>
+    <choice>
+      <ref name="config"/>
+      <ref name="users"/>
+      <ref name="dataset"/>
+    </choice>
+  </start>
+
+  <define name="config">
+    <element name="config">
+      <element name="database">
+        <element name="host"><text/></element>
+        <element name="port"><data type="integer"/></element>
+        <element name="name"><text/></element>
+        <element name="user"><text/></element>
+        <element name="password"><text/></element>
+      </element>
+      <element name="cache">
+        <element name="enabled"><data type="boolean"/></element>
+        <element name="ttl"><data type="integer"/></element>
+      </element>
+    </element>
+  </define>
+
+  <define name="users">
+    <element name="users">
+      <oneOrMore>
+        <ref name="user"/>
+      </oneOrMore>
+    </element>
+  </define>
+
+  <define name="user">
+    <element name="user">
+      <attribute name="id"><data type="integer"/></attribute>
+      <element name="name"><text/></element>
+      <element name="email"><text/></element>
+      <element name="created_at"><text/></element>
+      <element name="profile">
+        <element name="age"><data type="integer"/></element>
+        <element name="city"><text/></element>
+        <element name="preferences">
+          <element name="theme"><text/></element>
+          <element name="notifications"><data type="boolean"/></element>
+        </element>
+      </element>
+    </element>
+  </define>
+
+  <define name="dataset">
+    <element name="dataset">
+      <element name="header">
+        <element name="created"><text/></element>
+        <element name="count"><data type="integer"/></element>
+        <element name="format"><text/></element>
+      </element>
+      <element name="records">
+        <oneOrMore>
+          <ref name="record"/>
+        </oneOrMore>
+      </element>
+    </element>
+  </define>
+
+  <define name="record">
+    <element name="record">
+      <attribute name="id"><data type="integer"/></attribute>
+      <element name="timestamp"><text/></element>
+      <element name="data">
+        <element name="field1"><text/></element>
+        <element name="field2"><data type="integer"/></element>
+        <element name="field3"><text/></element>
+        <element name="nested">
+          <oneOrMore><element name="item"><text/></element></oneOrMore>
+        </element>
+      </element>
+      <element name="metadata">
+        <element name="source"><text/></element>
+        <element name="version"><text/></element>
+        <element name="checksum"><text/></element>
+      </element>
+    </element>
+  </define>
+</grammar>
+RNG
+
+_DEFAULT_XSLT_STYLESHEET = <<'XSL'.freeze
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+  <xsl:output method="xml" indent="yes"/>
+  <xsl:template match="/">
+    <report>
+      <xsl:apply-templates select="//user | //record | //database | //cache"/>
+      <total>
+        <xsl:value-of select="count(//user) + count(//record)"/>
+      </total>
+    </report>
+  </xsl:template>
+  <xsl:template match="user">
+    <row kind="user" id="{@id}" label="{name}"/>
+  </xsl:template>
+  <xsl:template match="record">
+    <row kind="record" id="{@id}" label="{data/field1}"/>
+  </xsl:template>
+  <xsl:template match="database">
+    <row kind="database" label="{name}"/>
+  </xsl:template>
+  <xsl:template match="cache">
+    <row kind="cache" label="{ttl}"/>
+  </xsl:template>
+</xsl:stylesheet>
+XSL
+
+    XPATH_QUERIES = ['//book', "//book[@id='101']", '//book[price > 30]/title'].freeze
+    XQUERY_EXPRESSIONS = ['count(//user | //record)', "//record[@id='101']/data/field1", '//user[profile/age > 40]/name'].freeze
+    RNG_SCHEMA = File.expand_path('test_data/schema.rng', Dir.pwd).then { |p| File.exist?(p) ? File.read(p) : _DEFAULT_RNG_SCHEMA }
+    XSLT_STYLESHEET = File.expand_path('test_data/transform.xsl', Dir.pwd).then { |p| File.exist?(p) ? File.read(p) : _DEFAULT_XSLT_STYLESHEET }
+
     OPERATIONS = {
       'parsing' => ->(s, data) { s.parse(data) },
       'generation' => ->(s, data) { s.generate(s.parse(data)) },
       'xpath' => lambda { |s, data|
         doc = s.parse(data)
-        s.xpath_query(doc, '//book')
-        s.xpath_query(doc, "//book[@id='101']")
-        s.xpath_query(doc, '//book[price > 30]/title')
+        XPATH_QUERIES.each { |q| s.xpath_query(doc, q) }
       },
+      'xquery' => lambda { |s, data|
+        doc = s.parse(data)
+        XQUERY_EXPRESSIONS.each { |x| s.xquery_eval(doc, x) }
+      },
+      'xslt' => ->(s, data) { s.xslt_transform(s.parse(data), XSLT_STYLESHEET) },
+      'validation' => ->(s, data) { s.validate(s.parse(data), RNG_SCHEMA) },
       'streaming' => ->(s, data) { s.stream_parse(data) { |_event, _data| } },
     }.freeze
 
@@ -161,6 +286,12 @@ module Serialbench
         serializers.select { |s| s.supports?(:sax) || s.supports?(:streaming) }
       when 'xpath'
         serializers.select { |s| s.supports?(:xpath) }
+      when 'xquery'
+        serializers.select { |s| s.supports?(:xquery) }
+      when 'xslt'
+        serializers.select { |s| s.supports?(:xslt) }
+      when 'validation'
+        serializers.select { |s| s.supports?(:validation) }
       else
         serializers
       end

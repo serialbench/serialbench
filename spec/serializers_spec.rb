@@ -435,8 +435,11 @@ RSpec.describe 'Serialbench Serializers' do
       it 'includes all expected XML serializers' do
         xml_serializers = Serialbench::Serializers.for_format(:xml)
         expected_xml = %w[rexml ox nokogiri oga libxml leptris]
+        expected_html = %w[nokogiri oga leptris]
         actual_xml = xml_serializers.map { |s| s.name }
         expect(actual_xml).to match_array(expected_xml)
+        actual_html = Serialbench::Serializers.for_format(:html).map(&:name)
+        expect(actual_html).to match_array(expected_html)
       end
 
       it 'includes all expected JSON serializers' do
